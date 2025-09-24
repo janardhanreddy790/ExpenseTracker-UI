@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import AddExpensePage from "./pages/AddExpensePage";
+import Overview from "./pages/Overview";
 
 console.log("✅ Loaded App.jsx with Router + Transactions API");
 
@@ -24,6 +25,14 @@ export default function App() {
           Dashboard
         </NavLink>
         <NavLink
+          to="/overview"
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : inactiveClass}`
+          }
+        >
+          Overview
+        </NavLink>
+        <NavLink
           to="/add"
           className={({ isActive }) =>
             `${linkClass} ${isActive ? activeClass : inactiveClass}`
@@ -38,6 +47,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/add" element={<AddExpensePage />} />
+          <Route path="/overview" element={<Overview />} />
         </Routes>
       </div>
     </Router>
