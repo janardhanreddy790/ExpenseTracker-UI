@@ -19,6 +19,7 @@ async function http(path, { method = "GET", body, headers } = {}) {
   return {};
 }
 
+// ----------------- Transactions -----------------
 export function listTransactions() {
   return http("/api/transactions");
 }
@@ -31,22 +32,50 @@ export function deleteTransaction(id) {
   return http(`/api/transactions/${id}`, { method: "DELETE" });
 }
 
-export function getSummaryByCategory() {
-  return http("/api/transactions/summary/by-category");
+export async function getPagedTransactions(
+  page = 0,
+  size = 10,
+  sortBy = "date",
+  sortDir = "desc"
+) {
+  return http(
+    `/api/transactions/paged?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`
+  );
 }
 
-export function getSummaryByMonth() {
-  return http("/api/transactions/summary/by-month");
+export async function updateTransaction(id, data) {
+  return http(`/api/transactions/${id}`, {
+    method: "PUT",
+    body: data,
+  });
 }
+
+export async function deleteBulk(ids) {
+  return http(`/api/transactions/bulk`, {
+    method: "DELETE",
+    body: ids,
+  });
+}
+
+// ----------------- Reference Data -----------------
+export function getReferenceData() {
+  return http("/api/reference-data");
+}
+
+// ----------------- Analytics / Summary -----------------
+export function getSummaryByCategory() {
+  return http("/api/analytics/categories");
+}
+
+// ❌ Temporarily disabled until backend is fixed
+// export function getSummaryByMonth() {
+//   return http("/api/analytics/months");
+// }
 
 export function getTopItems() {
-  return http("/api/transactions/summary/top-items");
+  return http("/api/analytics/items");
 }
 
 export function getTopVendors() {
-  return http("/api/transactions/summary/top-vendors");
-}
-
-export function getReferenceData() {
-  return http("/api/reference-data");
+  return http("/api/analytics/vendors");
 }
