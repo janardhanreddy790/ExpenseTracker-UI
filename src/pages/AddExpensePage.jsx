@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createTransaction } from "../services/api";
+import { createTransaction, getReferenceData } from "../services/api";
 
 export default function AddExpensePage() {
   const [refData, setRefData] = useState(null);
@@ -20,24 +20,29 @@ export default function AddExpensePage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reference-data`)
-      .then((res) => res.json())
-      .then((data) => {
-        setRefData(data);
-        // Pre-fill defaults
-        setForm((prev) => ({
-          ...prev,
-          category: Object.keys(data.categories)[0],
-          subcategory: "",
-          unit: data.units[0],
-          paymentMethod: data.paymentMethods[0],
-          owner: data.owners[0],
-        }));
-      });
+    getReferenceData().then((data) => {
+      setRefData(data);
+      setForm((prev) => ({
+        ...prev,
+        category: Object.keys(data.categories)[0] || "",
+        unit: data.units[0] || "",
+        paymentMethod: data.paymentMethods[0] || "",
+        owner: data.owners[0] || "",
+      }));
+    });
   }, []);
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "category") {
+      setForm((prev) => ({ ...prev, category: value, subcategory: "", item: "" }));
+      return;
+    }
+    if (name === "subcategory") {
+      setForm((prev) => ({ ...prev, subcategory: value, item: "" }));
+      return;
+    }
+    setForm({ ...form, [name]: value });
   }
 
   async function handleSubmit(e) {
@@ -57,69 +62,49 @@ export default function AddExpensePage() {
   const items = form.subcategory ? refData.itemsBySubcategory[form.subcategory] || [] : [];
 
   return (
-    <div>
+    <div className="p-6 space-y-6">
       <h2 className="text-2xl font-semibold text-indigo-600">Add Transaction</h2>
-      <p className="mt-2 text-gray-700">Fill details below ➕</p>
       {message && <p className="mt-4">{message}</p>}
 
-      <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-2 gap-4 bg-white p-6 rounded-xl shadow-md">
-        {/* Date */}
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-2 gap-4 bg-white p-6 rounded-xl shadow-md"
+      >
         <input type="date" name="date" value={form.date} onChange={handleChange} className="border p-2 rounded" />
-
-        {/* Category */}
-        <select name="category" value={form.category} onChange={handleChange} className="border p-2 rounded" required>
-          {Object.keys(refData.categories).map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
+        <select name="category" value={form.category} onChange={handleChange} className="border p-2 rounded">
+          {Object.keys(refData.categories).map((c) => <option key={c}>{c}</option>)}
         </select>
-
-        {/* Subcategory */}
         <select name="subcategory" value={form.subcategory} onChange={handleChange} className="border p-2 rounded">
           <option value="">-- Select Subcategory --</option>
-          {subcategories.map((sc) => (
-            <option key={sc} value={sc}>{sc}</option>
-          ))}
+          {subcategories.map((sc) => <option key={sc}>{sc}</option>)}
         </select>
-
-        {/* Item */}
-        <select name="item" value={items.includes(form.item) ? form.item : ""} onChange={handleChange} className="border p-2 rounded">
-          <option value="">-- Select Item --</option>
-          {items.map((it) => (
-            <option key={it} value={it}>{it}</option>
-          ))}
-        </select>
-
-        <input type="number" name="quantity" placeholder="Quantity" value={form.quantity} onChange={handleChange} className="border p-2 rounded" />
+        <div className="col-span-2 flex flex-col">
+          <select
+            name="item"
+            value={items.includes(form.item) ? form.item : ""}
+            onChange={handleChange}
+            className="border p-2 rounded mb-2"
+          >
+            <option value="">-- Select Item --</option>
+            {items.map((it) => <option key={it}>{it}</option>)}
+          </select>
+          <input type="text" name="item" value={form.item} onChange={handleChange} placeholder="Or type custom item" className="border p-2 rounded" />
+        </div>
+        <input type="number" name="quantity" value={form.quantity} onChange={handleChange} className="border p-2 rounded" />
         <select name="unit" value={form.unit} onChange={handleChange} className="border p-2 rounded">
-          {refData.units.map((u) => (
-            <option key={u} value={u}>{u}</option>
-          ))}
+          {refData.units.map((u) => <option key={u}>{u}</option>)}
         </select>
-
-        <input type="number" name="amount" placeholder="Amount (€)" value={form.amount} onChange={handleChange} className="border p-2 rounded" required />
-        <select name="currency" value={form.currency} onChange={handleChange} className="border p-2 rounded">
-          <option value="EUR">EUR</option>
-        </select>
-
+        <input type="number" name="amount" value={form.amount} onChange={handleChange} placeholder="Amount (€)" className="border p-2 rounded" />
+        <select name="currency" value={form.currency} onChange={handleChange} className="border p-2 rounded"><option value="EUR">EUR</option></select>
         <select name="paymentMethod" value={form.paymentMethod} onChange={handleChange} className="border p-2 rounded">
-          {refData.paymentMethods.map((pm) => (
-            <option key={pm} value={pm}>{pm}</option>
-          ))}
+          {refData.paymentMethods.map((pm) => <option key={pm}>{pm}</option>)}
         </select>
-
-        <input type="text" name="vendor" placeholder="Vendor" value={form.vendor} onChange={handleChange} className="border p-2 rounded" />
-
+        <input type="text" name="vendor" value={form.vendor} onChange={handleChange} placeholder="Vendor" className="border p-2 rounded" />
         <select name="owner" value={form.owner} onChange={handleChange} className="border p-2 rounded">
-          {refData.owners.map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
+          {refData.owners.map((o) => <option key={o}>{o}</option>)}
         </select>
-
-        <input type="text" name="notes" placeholder="Notes" value={form.notes} onChange={handleChange} className="border p-2 rounded col-span-2" />
-
-        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-500 col-span-2">
-          Save Transaction
-        </button>
+        <input type="text" name="notes" value={form.notes} onChange={handleChange} placeholder="Notes" className="border p-2 rounded col-span-2" />
+        <button type="submit" className="col-span-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Save Transaction</button>
       </form>
     </div>
   );
