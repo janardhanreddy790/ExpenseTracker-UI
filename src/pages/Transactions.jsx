@@ -6,6 +6,21 @@ import {
   deleteBulk,
 } from "../services/api";
 
+// 🎨 Category color mapping
+const categoryColors = {
+  "Groceries & Essentials": "bg-green-100 text-green-800",
+  "Household & Utilities": "bg-yellow-100 text-yellow-800",
+  "Shopping & Lifestyle": "bg-pink-100 text-pink-800",
+  "Travel & Transport": "bg-blue-100 text-blue-800",
+  "Health & Medical": "bg-red-100 text-red-800",
+  "Bills & Subscriptions": "bg-purple-100 text-purple-800",
+  "Entertainment & Leisure": "bg-orange-100 text-orange-800",
+  "Financial & Services": "bg-gray-200 text-gray-800",
+  "Gifts, Festivals & Social": "bg-indigo-100 text-indigo-800",
+  "Loans": "bg-slate-200 text-slate-800",
+  "Other / Miscellaneous": "bg-gray-100 text-gray-800",
+};
+
 export default function Transactions() {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(0);
@@ -29,7 +44,6 @@ export default function Transactions() {
   }, [page, size, sortBy, sortDir, keyword, categoryFilter, vendorFilter]);
 
   async function loadData() {
-    // Build query params for filters
     const params = new URLSearchParams({
       page,
       size,
@@ -128,8 +142,8 @@ export default function Transactions() {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Transactions</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Transactions</h1>
 
       {/* 🔎 Filters */}
       <div className="mb-4 flex flex-wrap gap-4">
@@ -141,7 +155,7 @@ export default function Transactions() {
             setKeyword(e.target.value);
             setPage(0);
           }}
-          className="border px-3 py-2 rounded w-64"
+          className="border px-3 py-2 rounded-lg w-64 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
         />
         <select
           value={categoryFilter}
@@ -149,14 +163,14 @@ export default function Transactions() {
             setCategoryFilter(e.target.value);
             setPage(0);
           }}
-          className="border px-3 py-2 rounded"
+          className="border px-3 py-2 rounded-lg shadow-sm"
         >
           <option value="">All Categories</option>
-          <option value="Groceries">Groceries</option>
-          <option value="Household">Household</option>
-          <option value="Transport">Transport</option>
-          <option value="Health">Health</option>
-          <option value="Entertainment">Entertainment</option>
+          <option value="Groceries & Essentials">Groceries</option>
+          <option value="Household & Utilities">Household</option>
+          <option value="Travel & Transport">Transport</option>
+          <option value="Health & Medical">Health</option>
+          <option value="Entertainment & Leisure">Entertainment</option>
         </select>
         <select
           value={vendorFilter}
@@ -164,7 +178,7 @@ export default function Transactions() {
             setVendorFilter(e.target.value);
             setPage(0);
           }}
-          className="border px-3 py-2 rounded"
+          className="border px-3 py-2 rounded-lg shadow-sm"
         >
           <option value="">All Vendors</option>
           <option value="Amazon">Amazon</option>
@@ -180,21 +194,21 @@ export default function Transactions() {
         <button
           onClick={handleBulkDelete}
           disabled={!selected.length}
-          className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50"
+          className="px-3 py-1 bg-red-500 text-white rounded-lg shadow-sm disabled:opacity-50"
         >
           Bulk Delete ({selected.length})
         </button>
         <button
           onClick={() => setBulkEdit(true)}
           disabled={!selected.length}
-          className="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
+          className="px-3 py-1 bg-blue-500 text-white rounded-lg shadow-sm disabled:opacity-50"
         >
           Bulk Edit ({selected.length})
         </button>
         {bulkEdit && (
           <button
             onClick={saveBulk}
-            className="px-3 py-1 bg-green-500 text-white rounded"
+            className="px-3 py-1 bg-green-500 text-white rounded-lg shadow-sm"
           >
             Save Bulk
           </button>
@@ -202,184 +216,89 @@ export default function Transactions() {
       </div>
 
       {/* Table */}
-      <table className="min-w-full border text-sm">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2">
-              <input
-                type="checkbox"
-                onChange={(e) =>
-                  setSelected(e.target.checked ? data.map((d) => d.id) : [])
-                }
-                checked={selected.length === data.length && data.length > 0}
-              />
-            </th>
-            <th className="p-2 cursor-pointer" onClick={() => toggleSort("date")}>
-              Date {sortBy === "date" ? (sortDir === "desc" ? "↓" : "↑") : ""}
-            </th>
-            <th
-              className="p-2 cursor-pointer"
-              onClick={() => toggleSort("category")}
-            >
-              Category{" "}
-              {sortBy === "category" ? (sortDir === "desc" ? "↓" : "↑") : ""}
-            </th>
-            <th className="p-2">Item</th>
-            <th
-              className="p-2 cursor-pointer"
-              onClick={() => toggleSort("amount")}
-            >
-              Amount {sortBy === "amount" ? (sortDir === "desc" ? "↓" : "↑") : ""}
-            </th>
-            <th
-              className="p-2 cursor-pointer"
-              onClick={() => toggleSort("vendor")}
-            >
-              Vendor {sortBy === "vendor" ? (sortDir === "desc" ? "↓" : "↑") : ""}
-            </th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((tx) => (
-            <tr key={tx.id} className="border-b">
-              <td className="p-2">
+      <div className="overflow-x-auto bg-white rounded-2xl shadow">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-100 text-gray-700">
+            <tr>
+              <th className="p-3">
                 <input
                   type="checkbox"
-                  checked={selected.includes(tx.id)}
-                  onChange={() => toggleSelect(tx.id)}
+                  onChange={(e) =>
+                    setSelected(e.target.checked ? data.map((d) => d.id) : [])
+                  }
+                  checked={selected.length === data.length && data.length > 0}
                 />
-              </td>
-
-              {bulkEdit && selected.includes(tx.id) ? (
-                <>
-                  <td className="p-2">{tx.date}</td>
-                  <td className="p-2">
+              </th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort("date")}>
+                Date {sortBy === "date" ? (sortDir === "desc" ? "↓" : "↑") : ""}
+              </th>
+              <th
+                className="p-3 cursor-pointer"
+                onClick={() => toggleSort("category")}
+              >
+                Category{" "}
+                {sortBy === "category" ? (sortDir === "desc" ? "↓" : "↑") : ""}
+              </th>
+              <th className="p-3">Item</th>
+              <th
+                className="p-3 cursor-pointer"
+                onClick={() => toggleSort("amount")}
+              >
+                Amount {sortBy === "amount" ? (sortDir === "desc" ? "↓" : "↑") : ""}
+              </th>
+              <th
+                className="p-3 cursor-pointer"
+                onClick={() => toggleSort("vendor")}
+              >
+                Vendor {sortBy === "vendor" ? (sortDir === "desc" ? "↓" : "↑") : ""}
+              </th>
+              <th className="p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((tx) => {
+              const color =
+                categoryColors[tx.category] || "bg-gray-100 text-gray-800";
+              return (
+                <tr key={tx.id} className="hover:bg-gray-50">
+                  <td className="p-3">
                     <input
-                      type="text"
-                      defaultValue={tx.category}
-                      onChange={(e) =>
-                        handleBulkChange(tx.id, "category", e.target.value)
-                      }
-                      className="border rounded px-2 py-1"
+                      type="checkbox"
+                      checked={selected.includes(tx.id)}
+                      onChange={() => toggleSelect(tx.id)}
                     />
                   </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      defaultValue={tx.item}
-                      onChange={(e) =>
-                        handleBulkChange(tx.id, "item", e.target.value)
-                      }
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="number"
-                      defaultValue={tx.amount}
-                      onChange={(e) =>
-                        handleBulkChange(tx.id, "amount", e.target.value)
-                      }
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      defaultValue={tx.vendor}
-                      onChange={(e) =>
-                        handleBulkChange(tx.id, "vendor", e.target.value)
-                      }
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2 text-gray-500">Bulk Editing</td>
-                </>
-              ) : editingId === tx.id ? (
-                <>
-                  <td className="p-2">
-                    <input
-                      type="date"
-                      value={editForm.date || ""}
-                      onChange={(e) => handleChange("date", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      value={editForm.category || ""}
-                      onChange={(e) => handleChange("category", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      value={editForm.item || ""}
-                      onChange={(e) => handleChange("item", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="number"
-                      value={editForm.amount || ""}
-                      onChange={(e) => handleChange("amount", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      value={editForm.vendor || ""}
-                      onChange={(e) => handleChange("vendor", e.target.value)}
-                      className="border rounded px-2 py-1"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <button
-                      onClick={() => saveEdit(tx.id)}
-                      className="text-green-600 mr-2"
+                  <td className="p-3">{tx.date}</td>
+                  <td className="p-3">
+                    <span
+                      className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${color}`}
                     >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="text-gray-600"
-                    >
-                      Cancel
-                    </button>
+                      {tx.category}
+                    </span>
                   </td>
-                </>
-              ) : (
-                <>
-                  <td className="p-2">{tx.date}</td>
-                  <td className="p-2">{tx.category}</td>
-                  <td className="p-2">{tx.item}</td>
-                  <td className="p-2">€{tx.amount?.toFixed(2)}</td>
-                  <td className="p-2">{tx.vendor}</td>
-                  <td className="p-2">
+                  <td className="p-3">{tx.item}</td>
+                  <td className="p-3 font-medium">€{tx.amount?.toFixed(2)}</td>
+                  <td className="p-3 text-gray-600">{tx.vendor}</td>
+                  <td className="p-3 flex gap-2">
                     <button
                       onClick={() => startEdit(tx)}
-                      className="text-blue-600 mr-2"
+                      className="text-blue-600 hover:underline"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(tx.id)}
-                      className="text-red-600"
+                      className="text-red-600 hover:underline"
                     >
                       Delete
                     </button>
                   </td>
-                </>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination with Page Size */}
       <div className="flex justify-between items-center mt-4">
@@ -404,7 +323,7 @@ export default function Transactions() {
           <button
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded-lg disabled:opacity-50"
           >
             Prev
           </button>
@@ -414,7 +333,7 @@ export default function Transactions() {
           <button
             disabled={page + 1 >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded-lg disabled:opacity-50"
           >
             Next
           </button>
